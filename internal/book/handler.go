@@ -44,7 +44,7 @@ func getBookByIdHandler(svc BookService) gin.HandlerFunc {
 
 func createBookHandler(svc BookService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Bind JSON request to CreateBookRequest struct
+
 		var req CreateBookRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -52,30 +52,48 @@ func createBookHandler(svc BookService) gin.HandlerFunc {
 		}
 
 		// Parse publish date
+		name, err := NewName(req.Name)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid name"})
+			return
+		}
+
+		description, err := NewDescription(req.Description)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid description"})
+			return
+		}
+
+		categories, err := NewCategories(req.Categories)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid categories"})
+			return
+		}
+
 		publishDate, err := time.Parse(time.RFC3339, req.PublishDate)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid publish date format"})
 			return
 		}
 
-		// Create Book object
-		newBook := Book{
-			ID:          uuid.New(),
-			Name:        req.Name,
-			PublishDate: publishDate,
-			Categories:  req.Categories,
-			Description: req.Description,
-		}
+		// Create command
+		command := CreateBookCommand{Name: *name, Description: *description, Categories: *categories, PublishDate: *NewPublishDate(publishDate)}
 
 		// Add the book using the service
-		err = svc.CreateBook(&newBook)
+		book, err := svc.CreateBook(&command)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add book"})
 			return
 		}
 
 		// Return the created book
-		c.JSON(http.StatusCreated, newBook)
+		c.JSON(http.StatusCreated, gin.H{
+			"id":           book.ID,
+			"name":         book.Name.Value(),
+			"publish_date": book.PublishDate.Value(),
+			"categories":   book.Categories.Value(),
+			"description":  book.Description.Value(),
+		})
 	}
 }
 

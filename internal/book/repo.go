@@ -2,9 +2,6 @@ package book
 
 import (
 	"errors"
-	"time"
-
-	"github.com/google/uuid"
 )
 
 type BookRepository interface {
@@ -19,16 +16,6 @@ type memoryBookRepository struct {
 
 func NewRepository() BookRepository {
 	books := make(map[BookId]Book)
-
-	aBook := Book{
-		ID:          uuid.New(),
-		Name:        "Don quixote",
-		PublishDate: time.Date(1605, 1, 1, 0, 0, 0, 0, time.UTC),
-		Categories:  []string{"Novel", "Classic", "Spanish Literature"},
-		Description: "Don Quixote is a novel written by Miguel de Cervantes. It is one of the most prominent works of Spanish literature and universally recognized as one of the greatest novels in history.",
-	}
-
-	books[aBook.ID] = aBook
 
 	return &memoryBookRepository{
 		books: books,
