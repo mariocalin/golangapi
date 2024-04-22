@@ -1,0 +1,6 @@
+{
+    "[go]": {
+        "editor.insertSpaces": true,
+        "editor.defaultFormatter": "golang.go"
+    }
+}

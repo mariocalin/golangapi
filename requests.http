@@ -1,0 +1,20 @@
+### Ping status
+
+GET http://localhost:8080/ping
+
+### Obtaining all books
+
+GET http://localhost:8080/book
+
+
+### Creating La Galatea
+
+POST http://localhost:8080/book
+Content-Type: application/json
+
+{
+    "name": "La Galatea",
+    "publish_date": "1585-01-01T00:00:00Z",
+    "categories": ["Novel", "Spanish Literature"],
+    "description": "La Galatea is a pastoral novel written by Miguel de Cervantes. It was first published in 1585 and is considered one of the earliest examples of Spanish prose fiction."
+}

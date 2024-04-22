@@ -1,0 +1,55 @@
+# Binarios para programas y plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Archivos de salida de compilación
+*.out
+*.o
+
+# Archivos de objetos
+*.obj
+
+# Archivos de cobertura
+*.cover
+
+# Carpeta que contiene archivos de perfil
+/profile
+
+# Dependencias
+/vendor/
+Godeps/
+
+# Archivos de configuración del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Carpeta que almacena archivos de caché compilados
+**/bin/
+
+# Carpeta que almacena paquetes de Go descargados
+**/pkg/
+
+# Archivos de configuración local
+*.swp
+*~
+.env
+.env.local
+.env.*.local
+.secret
+
+# Carpeta de volcados de memoria, útil para depuración
+*.core
+
+# Archivos de depuración de Delve
+dlv
+
+# Carpeta que almacena archivos generados automáticamente por tests
+**/testbin/
+
+# Carpeta que almacena archivos temporales
+**/tmp/
+**/temp/
