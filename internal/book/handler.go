@@ -22,7 +22,8 @@ func getAllBooksHandler(svc BookService) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		}
-		c.JSON(http.StatusOK, books)
+
+		c.JSON(http.StatusOK, createBookResources(books))
 	}
 }
 
@@ -35,10 +36,10 @@ func getBookByIdHandler(svc BookService) gin.HandlerFunc {
 			return
 		}
 		if book == nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Book not found"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Book not found"})
 			return
 		}
-		c.JSON(http.StatusOK, book)
+		c.JSON(http.StatusOK, createBookResource(book))
 	}
 }
 
@@ -87,14 +88,28 @@ func createBookHandler(svc BookService) gin.HandlerFunc {
 		}
 
 		// Return the created book
-		c.JSON(http.StatusCreated, gin.H{
-			"id":           book.ID,
-			"name":         book.Name.Value(),
-			"publish_date": book.PublishDate.Value(),
-			"categories":   book.Categories.Value(),
-			"description":  book.Description.Value(),
-		})
+		c.JSON(http.StatusCreated, createBookResource(book))
 	}
+}
+
+func createBookResource(book *Book) map[string]any {
+	return gin.H{
+		"id":           book.ID,
+		"name":         book.Name.Value(),
+		"publish_date": book.PublishDate.Value(),
+		"categories":   book.Categories.Value(),
+		"description":  book.Description.Value(),
+	}
+}
+
+func createBookResources(books []Book) []map[string]any {
+	resources := make([]map[string]any, len(books))
+
+	for _, book := range books {
+		resources = append(resources, createBookResource(&book))
+	}
+
+	return resources
 }
 
 func RegisterHandlers(r *gin.Engine, svc BookService) {

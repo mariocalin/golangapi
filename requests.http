@@ -6,6 +6,10 @@ GET http://localhost:8080/ping
 
 GET http://localhost:8080/book
 
+### Obtaining a book
+
+GET http://localhost:8080/book/844df53f-ee72-4b11-bb72-f530d95e6e55ss
+
 
 ### Creating La Galatea
 
