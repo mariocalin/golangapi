@@ -1,6 +1,7 @@
 package book
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -19,6 +20,7 @@ func getAllBooksHandler(svc BookService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		books, err := svc.GetBooks()
 		if err != nil {
+			fmt.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		}
@@ -29,16 +31,23 @@ func getAllBooksHandler(svc BookService) gin.HandlerFunc {
 
 func getBookByIdHandler(svc BookService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id, _ := uuid.Parse(c.Param("id"))
+		id, err := uuid.Parse(c.Param("id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad id"})
+			return
+		}
+
 		book, err := svc.GetBookByID(id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		}
+
 		if book == nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Book not found"})
 			return
 		}
+
 		c.JSON(http.StatusOK, createBookResource(book))
 	}
 }
@@ -78,7 +87,11 @@ func createBookHandler(svc BookService) gin.HandlerFunc {
 		}
 
 		// Create command
-		command := CreateBookCommand{Name: *name, Description: *description, Categories: *categories, PublishDate: *NewPublishDate(publishDate)}
+		command := CreateBookCommand{
+			Name:        *name,
+			Description: *description,
+			Categories:  *categories,
+			PublishDate: *NewPublishDate(publishDate)}
 
 		// Add the book using the service
 		book, err := svc.CreateBook(&command)
@@ -92,18 +105,18 @@ func createBookHandler(svc BookService) gin.HandlerFunc {
 	}
 }
 
-func createBookResource(book *Book) map[string]any {
-	return gin.H{
-		"id":           book.ID,
-		"name":         book.Name.Value(),
-		"publish_date": book.PublishDate.Value(),
-		"categories":   book.Categories.Value(),
-		"description":  book.Description.Value(),
+func createBookResource(book *Book) BookResource {
+	return BookResource{
+		Id:          book.ID.String(),
+		Name:        book.Name.Value(),
+		PublishDate: book.PublishDate.Value().Format(time.DateOnly),
+		Categories:  book.Categories.Value(),
+		Description: book.Description.Value(),
 	}
 }
 
-func createBookResources(books []Book) []map[string]any {
-	resources := make([]map[string]any, len(books))
+func createBookResources(books []Book) []BookResource {
+	var resources []BookResource
 
 	for _, book := range books {
 		resources = append(resources, createBookResource(&book))
@@ -116,4 +129,12 @@ func RegisterHandlers(r *gin.Engine, svc BookService) {
 	r.GET("/book", getAllBooksHandler(svc))
 	r.GET("/book/:id", getBookByIdHandler(svc))
 	r.POST("/book", createBookHandler(svc))
+}
+
+type BookResource struct {
+	Id          string   `json:"id"`
+	Name        string   `json:"name"`
+	PublishDate string   `json:"publish_date"`
+	Categories  []string `json:"categories"`
+	Description string   `json:"description"`
 }

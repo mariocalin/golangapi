@@ -2,5 +2,8 @@
     "[go]": {
         "editor.insertSpaces": true,
         "editor.defaultFormatter": "golang.go"
+    },
+    "go.toolsEnvVars": {
+        "CGO_ENABLED": "1"
     }
 }

@@ -6,13 +6,14 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func main() {
 	router := gin.Default()
 
 	// Book context
-	bookRepo := book.NewRepository()
+	bookRepo := book.NewSqlite3BookRepository(uuid.New().String() + ".sqlite3")
 	bookSvc := book.NewService(bookRepo)
 	book.RegisterHandlers(router, bookSvc)
 

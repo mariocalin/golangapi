@@ -9,6 +9,14 @@ import (
 
 type BookId = uuid.UUID
 
+type Book struct {
+	ID          BookId
+	Name        Name
+	PublishDate PublishDate
+	Categories  Categories
+	Description Description
+}
+
 type Name struct {
 	value string
 }
@@ -85,12 +93,4 @@ func NewDescription(value string) (*Description, error) {
 // Value devuelve el valor de la descripción.
 func (d *Description) Value() string {
 	return d.value
-}
-
-type Book struct {
-	ID          BookId
-	Name        Name
-	PublishDate PublishDate
-	Categories  Categories
-	Description Description
 }

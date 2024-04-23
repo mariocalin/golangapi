@@ -53,3 +53,7 @@ dlv
 # Carpeta que almacena archivos temporales
 **/tmp/
 **/temp/
+
+# Archivos base de datos
+*.db
+*.sqlite3
