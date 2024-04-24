@@ -2,6 +2,7 @@ package book
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -18,9 +19,10 @@ type CreateBookRequest struct {
 
 func getAllBooksHandler(svc BookService) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log.Println("Calling getAllBooksHandler")
 		books, err := svc.GetBooks()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		}
@@ -39,6 +41,7 @@ func getBookByIdHandler(svc BookService) gin.HandlerFunc {
 
 		book, err := svc.GetBookByID(id)
 		if err != nil {
+			fmt.Println(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		}
@@ -80,7 +83,7 @@ func createBookHandler(svc BookService) gin.HandlerFunc {
 			return
 		}
 
-		publishDate, err := time.Parse(time.RFC3339, req.PublishDate)
+		publishDate, err := time.Parse(time.DateOnly, req.PublishDate)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid publish date format"})
 			return
@@ -96,6 +99,7 @@ func createBookHandler(svc BookService) gin.HandlerFunc {
 		// Add the book using the service
 		book, err := svc.CreateBook(&command)
 		if err != nil {
+			fmt.Println(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add book"})
 			return
 		}

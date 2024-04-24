@@ -41,19 +41,6 @@ CREATE TABLE  IF NOT EXISTS book_categories (
     FOREIGN KEY (category_id) REFERENCES categories (id),
     PRIMARY KEY (book_id, category_id)
 );
-
-
--- Insertar un nuevo libro en la tabla books
-INSERT INTO books (id, name, publish_date, description) 
-VALUES ('c9bf6d6d-6a5a-4d28-a6ba-35a5410e5fc3', 'El Quijote', '1605-01-01', 'El ingenioso hidalgo don Quijote de la Mancha, es una novela escrita por el español Miguel de Cervantes Saavedra.');
-
--- Insertar nuevas categorías si no existen ya en la tabla categories
-INSERT INTO categories (category) VALUES ('Novela') ON CONFLICT DO NOTHING;
-INSERT INTO categories (category) VALUES ('Literatura Española') ON CONFLICT DO NOTHING;
-
--- Insertar las relaciones entre el libro y las categorías en la tabla book_categories
-INSERT INTO book_categories (book_id, category_id) 
-SELECT 'c9bf6d6d-6a5a-4d28-a6ba-35a5410e5fc3', id FROM categories WHERE category IN ('Novela', 'Literatura Española');
 `
 
 func NewSqlite3BookRepository(dbpath string) BookRepository {
@@ -90,7 +77,7 @@ func initSchema(db *sql.DB) error {
 
 func (r *sqlite3BookRepository) FindAll() ([]Book, error) {
 	rows, err := r.db.Query(`
-	SELECT b.id, b.name, b.publish_date, b.description, GROUP_CONCAT(c.category) 
+	SELECT b.id, b.name, DATE(b.publish_date), b.description, GROUP_CONCAT(c.category) 
 	FROM books b 
 		LEFT JOIN book_categories bc ON b.id = bc.book_id 
 		LEFT JOIN categories c ON bc.category_id = c.id 
@@ -134,13 +121,21 @@ func (r *sqlite3BookRepository) FindByID(id BookId) (*Book, error) {
 	var publishDateStr string
 	var categories string
 
-	err := r.db.QueryRow(`
-        SELECT b.id, b.name, b.publish_date, b.description, GROUP_CONCAT(c.category) 
+	stmt, err := r.db.Prepare(`
+        SELECT b.id, b.name, DATE(b.publish_date), b.description, GROUP_CONCAT(c.category) 
         FROM books b 
             LEFT JOIN book_categories bc ON b.id = bc.book_id 
             LEFT JOIN categories c ON bc.category_id = c.id 
         WHERE b.id = ? 
-        GROUP BY b.id`, id).Scan(&bookRow.Id, &bookRow.Name, &publishDateStr, &bookRow.Description, &categories)
+        GROUP BY b.id`)
+	if err != nil {
+		return nil, err
+	}
+
+	defer stmt.Close()
+
+	// Ejecutar la consulta preparada
+	err = stmt.QueryRow(id.String()).Scan(&bookRow.Id, &bookRow.Name, &publishDateStr, &bookRow.Description, &categories)
 	if err != nil {
 		return nil, err
 	}
@@ -159,34 +154,52 @@ func (r *sqlite3BookRepository) FindByID(id BookId) (*Book, error) {
 }
 
 func (r *sqlite3BookRepository) Create(book *Book) error {
-	tx, err := r.db.Begin()
+	transaction, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
 	defer func() error {
 		if err != nil {
-			tx.Rollback()
+			transaction.Rollback()
 			return err
 		}
-		tx.Commit()
+		transaction.Commit()
 		return nil
 	}()
 
-	_, err = tx.Exec("INSERT INTO books (id, name, publish_date, description) VALUES (?, ?, ?, ?)",
-		book.ID.String(), book.Name.Value(), book.PublishDate.Value().Format(time.DateOnly), book.Description.Value())
+	// Preparar la inserción del libro
+	bookStmt, err := transaction.Prepare("INSERT INTO books (id, name, publish_date, description) VALUES (?, ?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	defer bookStmt.Close()
+
+	_, err = bookStmt.Exec(book.ID.String(), book.Name.Value(), book.PublishDate.Value().Format(time.DateOnly), book.Description.Value())
 	if err != nil {
 		return err
 	}
 
+	// Preparar la inserción de categorías
+	categoryStmt, err := transaction.Prepare("INSERT INTO categories (category) VALUES (?) RETURNING id")
+	if err != nil {
+		return err
+	}
+	defer categoryStmt.Close()
+
+	linkStmt, err := transaction.Prepare("INSERT INTO book_categories (book_id, category_id) VALUES (?, ?)")
+	if err != nil {
+		return err
+	}
+	defer linkStmt.Close()
+
 	for _, category := range book.Categories.value {
 		var categoryID int
-		err := tx.QueryRow("INSERT INTO categories (category) VALUES (?) RETURNING id", category).Scan(&categoryID)
+		err := categoryStmt.QueryRow(category).Scan(&categoryID)
 		if err != nil {
 			return err
 		}
 
-		_, err = tx.Exec("INSERT INTO book_categories (book_id, category_id) VALUES (?, ?)",
-			book.ID, categoryID)
+		_, err = linkStmt.Exec(book.ID, categoryID)
 		if err != nil {
 			return err
 		}
@@ -196,41 +209,52 @@ func (r *sqlite3BookRepository) Create(book *Book) error {
 }
 
 func (r *sqlite3BookRepository) Update(book *Book) error {
-	tx, err := r.db.Begin()
+	transaction, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
-
-	defer func() error {
+	defer func() {
 		if err != nil {
-			tx.Rollback()
-			return err
+			transaction.Rollback()
+			return
 		}
-		tx.Commit()
-		return nil
+		transaction.Commit()
 	}()
 
-	_, err = tx.Exec("DELETE FROM book_categories WHERE book_id = ?", book.ID.String())
+	// Eliminar todas las categorías asociadas al libro
+	_, err = transaction.Exec("DELETE FROM book_categories WHERE book_id = ?", book.ID.String())
 	if err != nil {
 		return err
 	}
 
+	// Preparar la inserción de categorías
+	categoryStmt, err := transaction.Prepare("INSERT INTO categories (category) VALUES (?) RETURNING id")
+	if err != nil {
+		return err
+	}
+	defer categoryStmt.Close()
+
+	linkStmt, err := transaction.Prepare("INSERT INTO book_categories (book_id, category_id) VALUES (?, ?)")
+	if err != nil {
+		return err
+	}
+	defer linkStmt.Close()
+
+	// Insertar las nuevas categorías
 	for _, category := range book.Categories.value {
 		var categoryID int
-		err := tx.QueryRow("INSERT INTO categories (category) VALUES (?) RETURNING id", category).Scan(&categoryID)
+		err := categoryStmt.QueryRow(category).Scan(&categoryID)
 		if err != nil {
 			return err
 		}
 
-		_, err = tx.Exec("INSERT INTO book_categories (book_id, category_id) VALUES (?, ?)",
-			book.ID.String(), categoryID)
+		_, err = linkStmt.Exec(book.ID.String(), categoryID)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
-
 }
 
 func toBook(br *bookRow) Book {
