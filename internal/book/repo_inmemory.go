@@ -6,6 +6,14 @@ type memoryBookRepository struct {
 	books map[BookId]Book
 }
 
+func NewInMemoryBookRepository() BookRepository {
+	books := make(map[BookId]Book)
+
+	return &memoryBookRepository{
+		books: books,
+	}
+}
+
 func (r *memoryBookRepository) FindAll() ([]Book, error) {
 	list := make([]Book, 0, len(r.books))
 	for _, book := range r.books {

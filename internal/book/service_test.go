@@ -37,9 +37,10 @@ func (m *mockBookRepository) Update(book *Book) error {
 func Test_CreateBook(t *testing.T) {
 	// Arrange
 	repo := new(mockBookRepository)
+
 	repo.On("Create", mock.Anything).Return(nil)
 
-	service := NewService(repo)
+	service := NewService(repo, nil)
 
 	command := CreateBookCommand{
 		Name:        Name{"Test Book"},
@@ -79,7 +80,7 @@ func Test_UpdateBookName(t *testing.T) {
 
 	repo.On("FindByID", existingBook.ID).Return(&existingBook, nil)
 
-	service := NewService(repo)
+	service := NewService(repo, nil)
 
 	command := UpdateBookCommand{
 		Name: &Name{"Updated Test Book"},

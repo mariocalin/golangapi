@@ -6,11 +6,3 @@ type BookRepository interface {
 	Create(book *Book) error
 	Update(book *Book) error
 }
-
-func NewInMemoryBookRepository() BookRepository {
-	books := make(map[BookId]Book)
-
-	return &memoryBookRepository{
-		books: books,
-	}
-}

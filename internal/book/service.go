@@ -24,12 +24,14 @@ type BookService interface {
 }
 
 type service struct {
-	repo BookRepository
+	repo   BookRepository
+	events BookEventPropagator
 }
 
-func NewService(repo BookRepository) BookService {
+func NewService(repo BookRepository, events BookEventPropagator) BookService {
 	return &service{
-		repo: repo,
+		repo:   repo,
+		events: events,
 	}
 }
 
@@ -51,6 +53,7 @@ func (s *service) CreateBook(command *CreateBookCommand) (*Book, error) {
 	}
 
 	s.repo.Create(&newBook)
+	s.events.propagateBookCreated(&BookCreated{Id: newBook.ID})
 
 	return &newBook, nil
 }

@@ -19,12 +19,8 @@ var (
 )
 
 func main() {
-	// Book context
-	bookRepo := book.NewSqlite3BookRepository("data.sqlite3")
-	bookSvc := book.NewService(bookRepo)
-
 	// Configuración del productor de Kafka
-	producer, err := sarama.NewSyncProducer(brokers, nil)
+	producer, err := sarama.NewAsyncProducer(brokers, nil)
 	if err != nil {
 		panic(fmt.Sprintf("Error creating Kafka producer: %s", err))
 	}
@@ -38,6 +34,11 @@ func main() {
 		panic(fmt.Sprintf("Error creando Kafka consumer: %s", err))
 	}
 	defer consumer.Close()
+
+	// Book context
+	bookRepo := book.NewSqlite3BookRepository("data.sqlite3")
+	bookEventPropagator := book.NewKafkaBookEventPropagator(producer, topic)
+	bookSvc := book.NewService(bookRepo, bookEventPropagator)
 
 	go consumeMessages(consumer)
 
