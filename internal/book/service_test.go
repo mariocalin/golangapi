@@ -10,37 +10,14 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type mockBookRepository struct {
-	mock.Mock
-}
-
-func (m *mockBookRepository) Create(book *Book) error {
-	args := m.Called(book)
-	return args.Error(0)
-}
-
-func (m *mockBookRepository) FindAll() ([]Book, error) {
-	args := m.Called()
-	return args.Get(0).([]Book), args.Error(1)
-}
-
-func (m *mockBookRepository) FindByID(id BookId) (*Book, error) {
-	args := m.Called(id)
-	return args.Get(0).(*Book), args.Error(1)
-}
-
-func (m *mockBookRepository) Update(book *Book) error {
-	args := m.Called(book)
-	return args.Error(0)
-}
-
 func Test_CreateBook(t *testing.T) {
 	// Arrange
-	repo := new(mockBookRepository)
+	repo := NewMockBookRepository(t)
+	event := NewMockBookEventPropagator(t)
 
 	repo.On("Create", mock.Anything).Return(nil)
-
-	service := NewService(repo, nil)
+	event.On("PropagateBookCreated", mock.Anything).Return(nil)
+	service := NewService(repo, event)
 
 	command := CreateBookCommand{
 		Name:        Name{"Test Book"},
@@ -54,7 +31,9 @@ func Test_CreateBook(t *testing.T) {
 
 	// Assert
 	assert.NoError(t, err)
+
 	repo.AssertCalled(t, "Create", mock.Anything)
+	event.AssertCalled(t, "PropagateBookCreated", mock.Anything)
 
 	bookArgument := repo.Calls[0].Arguments.Get(0).(*Book)
 	assert.Equal(t, command.Name.Value(), bookArgument.Name.Value())
@@ -62,12 +41,18 @@ func Test_CreateBook(t *testing.T) {
 	assert.Equal(t, command.Description.Value(), bookArgument.Description.Value())
 	assert.Equal(t, command.PublishDate.Value(), bookArgument.PublishDate.Value())
 	assert.NotNil(t, bookArgument.ID)
+
+	bookCreatedEvent := event.Calls[0].Arguments.Get(0).(*BookCreated)
+
+	assert.Equal(t, bookCreatedEvent.Id, bookArgument.ID)
+
 	repo.AssertExpectations(t)
+	event.AssertExpectations(t)
 }
 
 func Test_UpdateBookName(t *testing.T) {
 	// Arrange
-	repo := new(mockBookRepository)
+	repo := NewMockBookRepository(t)
 	repo.On("Update", mock.Anything).Return(nil)
 
 	existingBook := Book{
@@ -94,9 +79,7 @@ func Test_UpdateBookName(t *testing.T) {
 	repo.AssertCalled(t, "FindByID", mock.Anything)
 	repo.AssertCalled(t, "Update", mock.Anything)
 
-	calls := repo.Calls
-
-	bookArgument := calls[1].Arguments.Get(0).(*Book)
+	bookArgument := repo.Calls[1].Arguments.Get(0).(*Book)
 	fmt.Println(bookArgument)
 	assert.Equal(t, command.Name.Value(), bookArgument.Name.Value())
 	assert.Equal(t, existingBook.Categories.Value(), bookArgument.Categories.Value())

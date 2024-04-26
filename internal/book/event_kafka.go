@@ -18,7 +18,7 @@ func NewKafkaBookEventPropagator(producer sarama.AsyncProducer, topic string) Bo
 	}
 }
 
-func (p *kafkaBookEventPropagator) propagateBookCreated(bookCreated *BookCreated) {
+func (p *kafkaBookEventPropagator) PropagateBookCreated(bookCreated *BookCreated) {
 	payload := struct {
 		Id string `json:"id"`
 	}{

@@ -53,7 +53,7 @@ func (s *service) CreateBook(command *CreateBookCommand) (*Book, error) {
 	}
 
 	s.repo.Create(&newBook)
-	s.events.propagateBookCreated(&BookCreated{Id: newBook.ID})
+	s.events.PropagateBookCreated(&BookCreated{Id: newBook.ID})
 
 	return &newBook, nil
 }

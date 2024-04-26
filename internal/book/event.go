@@ -5,5 +5,5 @@ type BookCreated struct {
 }
 
 type BookEventPropagator interface {
-	propagateBookCreated(bookCreated *BookCreated)
+	PropagateBookCreated(bookCreated *BookCreated)
 }
