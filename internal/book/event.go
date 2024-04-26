@@ -7,9 +7,11 @@ type BookCreated struct {
 
 type BookEventPropagator interface {
 	PropagateBookCreated(bookCreated *BookCreated)
+	Close()
 }
 
 type BookEventConsumer interface {
 	BindBookCreated(func(*BookCreated))
 	StartConsuming()
+	Close()
 }

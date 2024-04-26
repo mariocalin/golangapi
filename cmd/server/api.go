@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"library-api/internal/book"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,24 +13,36 @@ import (
 )
 
 func main() {
-	// Book context
+	log.Println("Starting api")
+
+	// ---- BOOK ----
+	log.Println("Creating context...")
+
 	bookRepo := book.CreateBookRepositoryInstance()
+	log.Println("bookRepo created")
+
 	bookEventPropagator := book.CreateBookEventPropagatorInstance()
+	log.Println("bookEventPropagator created")
+
 	bookEventConsumer := book.CreateBooEventConsumerInstance()
+	log.Println("bookEventConsumer created")
 
 	bookSvc := book.NewService(bookRepo, bookEventPropagator)
+	log.Println("bookEventConsumer created")
 
 	bookEventConsumer.BindBookCreated(func(bc *book.BookCreated) {
 		bok, _ := bookSvc.GetBookByID(bc.Id)
-		fmt.Println("A book has been created", bok)
+		log.Println("A book has been created", bok)
 	})
 
 	go bookEventConsumer.StartConsuming()
+	defer bookEventConsumer.Close()
+	defer bookEventPropagator.Close()
 
 	router := gin.Default()
 	book.RegisterHandlers(router, bookSvc)
 
-	// Ping context
+	// ---- STATUS ----
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
@@ -41,7 +54,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	fmt.Println("Aplicación detenida")
+	log.Println("Aplicación stopped")
 }
 
 func startServer(gin *gin.Engine) {

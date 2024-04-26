@@ -1,5 +1,7 @@
 package book
 
+import "log"
+
 type channelBookConsumer struct {
 	bookCreatedCallbacks []func(*BookCreated)
 	bookCreatedChannel   chan *BookCreated
@@ -16,11 +18,19 @@ func (consumer *channelBookConsumer) BindBookCreated(callback func(*BookCreated)
 }
 
 func (consumer *channelBookConsumer) StartConsuming() {
+	log.Println("Listening to events")
+
 	for bookCreated := range consumer.bookCreatedChannel {
+		log.Println("Event received", bookCreated)
+
 		for _, callback := range consumer.bookCreatedCallbacks {
 			callback(bookCreated)
 		}
 	}
+}
+
+func (consumer *channelBookConsumer) Close() {
+	log.Println("Consumer will not close the channel")
 }
 
 type channelBookEventPropagator struct {
@@ -35,4 +45,9 @@ func NewChannelBookEventPropagator(bookCreatedChannel chan *BookCreated) *channe
 
 func (propagator *channelBookEventPropagator) PropagateBookCreated(bookCreated *BookCreated) {
 	propagator.bookCreatedChannel <- bookCreated
+}
+
+func (propagator *channelBookEventPropagator) Close() {
+	log.Println("Closing propagator gracefully")
+	close(propagator.bookCreatedChannel)
 }

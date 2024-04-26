@@ -32,3 +32,7 @@ func (p *kafkaBookEventPropagator) PropagateBookCreated(bookCreated *BookCreated
 		Value: sarama.ByteEncoder(msgBytes),
 	}
 }
+
+func (p *kafkaBookEventPropagator) Close() {
+	p.producer.Close()
+}

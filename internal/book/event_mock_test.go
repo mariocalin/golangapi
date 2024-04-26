@@ -9,6 +9,11 @@ type MockBookEventPropagator struct {
 	mock.Mock
 }
 
+// Close provides a mock function with given fields:
+func (_m *MockBookEventPropagator) Close() {
+	_m.Called()
+}
+
 // PropagateBookCreated provides a mock function with given fields: bookCreated
 func (_m *MockBookEventPropagator) PropagateBookCreated(bookCreated *BookCreated) {
 	_m.Called(bookCreated)
