@@ -20,8 +20,10 @@ func setupRouter() *gin.Engine {
 
 func TestCreateBookHandler(t *testing.T) {
 	mockSvc := NewMockBookService(t)
+	controller := NewBookController(mockSvc)
+
 	router := setupRouter()
-	router.POST("/book", createBookHandler(mockSvc))
+	router.POST("/book", controller.CreateBook)
 
 	t.Run("Success", func(t *testing.T) {
 

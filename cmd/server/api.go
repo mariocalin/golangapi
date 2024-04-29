@@ -53,7 +53,8 @@ func main() {
 	defer bookEventPropagator.Close()
 
 	router := gin.Default()
-	book.RegisterHandlers(router, bookSvc)
+	bookController := book.NewBookController(bookSvc)
+	registerHandlers(router, bookController)
 
 	// ---- STATUS ----
 	router.GET("/ping", func(c *gin.Context) {
@@ -75,4 +76,10 @@ func startServer(gin *gin.Engine) {
 	if err := gin.Run(":8080"); err != nil {
 		panic(fmt.Sprintf("Error running HTTP Server: %s", err.Error()))
 	}
+}
+
+func registerHandlers(r *gin.Engine, bookController *book.BookController) {
+	r.GET("/book", bookController.GetAllBooks)
+	r.GET("/book/:id", bookController.GetBookById)
+	r.POST("/book", bookController.CreateBook)
 }
