@@ -12,6 +12,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+//	@title			Library Api
+//	@version		1.0
+//	@description	API for creating and retreiving books
+
+//	@contact.name	Mario
+//	@contact.url	http://example.org
+//	@contact.email	mario.calin@mindcurv.com
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host		localhost:8080
+// @BasePath	/
 func main() {
 	log.Println("Starting api")
 

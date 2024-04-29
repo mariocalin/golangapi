@@ -1,0 +1,110 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API for creating and retreiving books",
+        "title": "Library Api",
+        "contact": {
+            "name": "Mario",
+            "url": "http://example.org",
+            "email": "mario.calin@mindcurv.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/book": {
+            "get": {
+                "description": "get all books that are stored in the system",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Get all persisted books",
+                "operationId": "get-all-books",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/book.BookResource"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creat a book with required parameters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Create a book",
+                "parameters": [
+                    {
+                        "example": "Panoli",
+                        "description": "Book name",
+                        "name": "name",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "example": "Pepito grillo",
+                        "description": "Date of the publication of the book",
+                        "name": "publish_date",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/book.BookResource"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "book.BookResource": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "publish_date": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

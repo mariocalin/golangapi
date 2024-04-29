@@ -17,6 +17,15 @@ type CreateBookRequest struct {
 	Description string   `json:"description" binding:"required"`
 }
 
+// getAllBooksHandler godoc
+//
+//	@Summary		Get all persisted books
+//	@Description	get all books that are stored in the system
+//	@ID				get-all-books
+//	@Tags			books
+//	@Produce		json
+//	@Success		200	{object}	BookResource
+//	@Router			/book [get]
 func getAllBooksHandler(svc BookService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		log.Println("Calling getAllBooksHandler")
@@ -55,6 +64,18 @@ func getBookByIdHandler(svc BookService) gin.HandlerFunc {
 	}
 }
 
+// createBookHandler godoc
+//
+//	@Summary		Create a book
+//	@Description	Creat a book with required parameters
+//	@Tags			books
+//	@Accept			json
+//	@Produce		json
+//	@Param			name			body	string	true	"Book name"
+//	@Param			publish_date	body	string	true	"Date of the publication of the book"
+//
+// @Success		200		{object}	BookResource
+// @Router			/book [post]
 func createBookHandler(svc BookService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 

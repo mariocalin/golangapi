@@ -1,0 +1,74 @@
+basePath: /
+definitions:
+  book.BookResource:
+    properties:
+      categories:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      publish_date:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: mario.calin@mindcurv.com
+    name: Mario
+    url: http://example.org
+  description: API for creating and retreiving books
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Library Api
+  version: "1.0"
+paths:
+  /book:
+    get:
+      description: get all books that are stored in the system
+      operationId: get-all-books
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/book.BookResource'
+      summary: Get all persisted books
+      tags:
+      - books
+    post:
+      consumes:
+      - application/json
+      description: Creat a book with required parameters
+      parameters:
+      - description: Book name
+        example: Panoli
+        in: body
+        name: name
+        required: true
+        schema:
+          type: string
+      - description: Date of the publication of the book
+        example: Pepito grillo
+        in: body
+        name: publish_date
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/book.BookResource'
+      summary: Create a book
+      tags:
+      - books
+swagger: "2.0"
