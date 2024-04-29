@@ -70,8 +70,7 @@ func (controller *BookController) GetBookById(c *gin.Context) {
 //	@Tags			books
 //	@Accept			json
 //	@Produce		json
-//	@Param			name			body	string	true	"Book name"
-//	@Param			publish_date	body	string	true	"Date of the publication of the book"
+//	@Param			request		body	CreateBookRequest	true	"Book"
 //
 // @Success		200		{object}	BookResource
 // @Router			/book [post]

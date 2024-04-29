@@ -57,23 +57,12 @@ const docTemplate = `{
                 "summary": "Create a book",
                 "parameters": [
                     {
-                        "example": "Panoli",
-                        "description": "Book name",
-                        "name": "name",
+                        "description": "Book",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "example": "Pepito grillo",
-                        "description": "Date of the publication of the book",
-                        "name": "publish_date",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/book.CreateBookRequest"
                         }
                     }
                 ],
@@ -102,6 +91,32 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "publish_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "book.CreateBookRequest": {
+            "type": "object",
+            "required": [
+                "categories",
+                "description",
+                "name",
+                "publish_date"
+            ],
+            "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "description": {
                     "type": "string"
                 },
                 "name": {

@@ -15,6 +15,24 @@ definitions:
       publish_date:
         type: string
     type: object
+  book.CreateBookRequest:
+    properties:
+      categories:
+        items:
+          type: string
+        type: array
+      description:
+        type: string
+      name:
+        type: string
+      publish_date:
+        type: string
+    required:
+    - categories
+    - description
+    - name
+    - publish_date
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -47,20 +65,12 @@ paths:
       - application/json
       description: Creat a book with required parameters
       parameters:
-      - description: Book name
-        example: Panoli
+      - description: Book
         in: body
-        name: name
+        name: request
         required: true
         schema:
-          type: string
-      - description: Date of the publication of the book
-        example: Pepito grillo
-        in: body
-        name: publish_date
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/book.CreateBookRequest'
       produces:
       - application/json
       responses:
