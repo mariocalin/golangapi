@@ -1,8 +1,8 @@
 package book
 
 type BookCreated struct {
-	Id   BookId
-	Name Name
+	Id   *BookId
+	Name *Name
 }
 
 type BookEventPropagator interface {

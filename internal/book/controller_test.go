@@ -29,12 +29,14 @@ func TestCreateBookHandler(t *testing.T) {
 
 		bookDate, _ := time.Parse(time.DateOnly, "2022-01-01")
 
+		id := uuid.New()
+
 		book := Book{
-			ID:          uuid.New(),
-			Name:        Name{"Example"},
-			Description: Description{"Example"},
-			Categories:  Categories{[]string{"fiction"}},
-			PublishDate: PublishDate{bookDate},
+			ID:          &id,
+			Name:        &Name{"Example"},
+			Description: &Description{"Example"},
+			Categories:  &Categories{[]string{"fiction"}},
+			PublishDate: &PublishDate{bookDate},
 		}
 
 		mockSvc.On("CreateBook", mock.Anything).Return(&book, nil)

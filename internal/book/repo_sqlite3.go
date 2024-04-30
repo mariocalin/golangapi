@@ -116,7 +116,7 @@ func (r *sqlite3BookRepository) FindAll() ([]Book, error) {
 	return books, nil
 }
 
-func (r *sqlite3BookRepository) FindByID(id BookId) (*Book, error) {
+func (r *sqlite3BookRepository) FindByID(id *BookId) (*Book, error) {
 	var bookRow bookRow
 	var publishDateStr string
 	var categories string
@@ -261,10 +261,10 @@ func toBook(br *bookRow) Book {
 	id, _ := uuid.Parse(br.Id)
 
 	return Book{
-		ID:          id,
-		Name:        Name{value: br.Name},
-		PublishDate: PublishDate{value: br.PublishDate},
-		Description: Description{value: br.Description},
-		Categories:  Categories{value: br.Categories},
+		ID:          &id,
+		Name:        &Name{value: br.Name},
+		PublishDate: &PublishDate{value: br.PublishDate},
+		Description: &Description{value: br.Description},
+		Categories:  &Categories{value: br.Categories},
 	}
 }

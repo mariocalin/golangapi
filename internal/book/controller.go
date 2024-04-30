@@ -48,7 +48,7 @@ func (controller *BookController) GetBookById(c *gin.Context) {
 		return
 	}
 
-	book, err := controller.svc.GetBookByID(id)
+	book, err := controller.svc.GetBookByID(&id)
 	if err != nil {
 		fmt.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
@@ -82,36 +82,36 @@ func (controller *BookController) CreateBook(c *gin.Context) {
 	}
 
 	// Parse publish date
-	name, err := NewName(req.Name)
+	name, err := NewName(*req.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid name"})
 		return
 	}
 
-	description, err := NewDescription(req.Description)
+	description, err := NewDescription(*req.Description)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid description"})
 		return
 	}
 
-	categories, err := NewCategories(req.Categories)
+	categories, err := NewCategories(*req.Categories)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid categories"})
 		return
 	}
 
-	publishDate, err := time.Parse(time.DateOnly, req.PublishDate)
+	publishDate, err := time.Parse(time.DateOnly, *req.PublishDate)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid publish date format"})
 		return
 	}
 
 	// Create command
-	command := CreateBookCommand{
-		Name:        *name,
-		Description: *description,
-		Categories:  *categories,
-		PublishDate: *NewPublishDate(publishDate)}
+	command := BookCommand{
+		Name:        name,
+		Description: description,
+		Categories:  categories,
+		PublishDate: NewPublishDate(publishDate)}
 
 	// Add the book using the service
 	book, err := controller.svc.CreateBook(&command)
@@ -126,10 +126,10 @@ func (controller *BookController) CreateBook(c *gin.Context) {
 }
 
 type CreateBookRequest struct {
-	Name        string   `json:"name" binding:"required"`
-	PublishDate string   `json:"publish_date" binding:"required"`
-	Categories  []string `json:"categories" binding:"required"`
-	Description string   `json:"description" binding:"required"`
+	Name        *string   `json:"name" binding:"required"`
+	PublishDate *string   `json:"publish_date" binding:"required"`
+	Categories  *[]string `json:"categories" binding:"required"`
+	Description *string   `json:"description" binding:"required"`
 }
 
 type BookResource struct {

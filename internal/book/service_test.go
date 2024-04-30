@@ -20,11 +20,11 @@ func Test_BookService(t *testing.T) {
 		repo.On("Create", mock.Anything).Return(nil)
 		event.On("PropagateBookCreated", mock.Anything).Return(nil)
 
-		command := CreateBookCommand{
-			Name:        Name{"Test Book"},
-			PublishDate: PublishDate{time.Now()},
-			Categories:  Categories{[]string{"category"}},
-			Description: Description{"This is a test book"},
+		command := BookCommand{
+			Name:        &Name{"Test Book"},
+			PublishDate: &PublishDate{time.Now()},
+			Categories:  &Categories{[]string{"category"}},
+			Description: &Description{"This is a test book"},
 		}
 
 		// Act
@@ -58,17 +58,19 @@ func Test_BookService(t *testing.T) {
 
 		repo.On("Update", mock.Anything).Return(nil)
 
+		id := uuid.New()
+
 		existingBook := Book{
-			ID:          uuid.New(),
-			Name:        Name{"Test Book"},
-			PublishDate: PublishDate{time.Now()},
-			Categories:  Categories{[]string{"category"}},
-			Description: Description{"This is a test book"},
+			ID:          &id,
+			Name:        &Name{"Test Book"},
+			PublishDate: &PublishDate{time.Now()},
+			Categories:  &Categories{[]string{"category"}},
+			Description: &Description{"This is a test book"},
 		}
 
 		repo.On("FindByID", existingBook.ID).Return(&existingBook, nil)
 
-		command := UpdateBookCommand{
+		command := BookCommand{
 			Name: &Name{"Updated Test Book"},
 		}
 

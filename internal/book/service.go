@@ -1,26 +1,27 @@
 package book
 
-import "github.com/google/uuid"
+import (
+	"errors"
 
-type CreateBookCommand struct {
-	Name        Name
-	PublishDate PublishDate
-	Categories  Categories
-	Description Description
-}
+	"github.com/google/uuid"
+)
 
-type UpdateBookCommand struct {
+type BookCommand struct {
 	Name        *Name
 	PublishDate *PublishDate
 	Categories  *Categories
 	Description *Description
 }
 
+func (command *BookCommand) isValidForCreate() bool {
+	return command.Name != nil && command.PublishDate != nil && command.Categories != nil && command.Description != nil
+}
+
 type BookService interface {
 	GetBooks() ([]Book, error)
-	GetBookByID(id BookId) (*Book, error)
-	CreateBook(command *CreateBookCommand) (*Book, error)
-	UpdateBook(id BookId, command *UpdateBookCommand) error
+	GetBookByID(id *BookId) (*Book, error)
+	CreateBook(command *BookCommand) (*Book, error)
+	UpdateBook(id *BookId, command *BookCommand) error
 }
 
 type service struct {
@@ -39,13 +40,20 @@ func (s *service) GetBooks() ([]Book, error) {
 	return s.repo.FindAll()
 }
 
-func (s *service) GetBookByID(id BookId) (*Book, error) {
+func (s *service) GetBookByID(id *BookId) (*Book, error) {
 	return s.repo.FindByID(id)
 }
 
-func (s *service) CreateBook(command *CreateBookCommand) (*Book, error) {
+func (s *service) CreateBook(command *BookCommand) (*Book, error) {
+
+	if !command.isValidForCreate() {
+		return nil, errors.New("cannot create book")
+	}
+
+	id := uuid.New()
+
 	newBook := Book{
-		ID:          uuid.New(),
+		ID:          &id,
 		Name:        command.Name,
 		PublishDate: command.PublishDate,
 		Categories:  command.Categories,
@@ -58,26 +66,26 @@ func (s *service) CreateBook(command *CreateBookCommand) (*Book, error) {
 	return &newBook, nil
 }
 
-func (s *service) UpdateBook(id BookId, command *UpdateBookCommand) error {
+func (s *service) UpdateBook(id *BookId, command *BookCommand) error {
 	existingBook, notFound := s.repo.FindByID(id)
 	if notFound != nil {
 		return notFound
 	}
 
 	if command.Name != nil {
-		existingBook.Name = *command.Name
+		existingBook.Name = command.Name
 	}
 
 	if command.PublishDate != nil {
-		existingBook.PublishDate = *command.PublishDate
+		existingBook.PublishDate = command.PublishDate
 	}
 
 	if command.Categories != nil {
-		existingBook.Categories = *command.Categories
+		existingBook.Categories = command.Categories
 	}
 
 	if command.Description != nil {
-		existingBook.Description = *command.Description
+		existingBook.Description = command.Description
 	}
 
 	s.repo.Update(existingBook)

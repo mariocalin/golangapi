@@ -22,8 +22,8 @@ func (r *memoryBookRepository) FindAll() ([]Book, error) {
 	return list, nil
 }
 
-func (r *memoryBookRepository) FindByID(id BookId) (*Book, error) {
-	book, exists := r.books[id]
+func (r *memoryBookRepository) FindByID(id *BookId) (*Book, error) {
+	book, exists := r.books[*id]
 	if !exists {
 		return nil, nil
 	}
@@ -31,16 +31,16 @@ func (r *memoryBookRepository) FindByID(id BookId) (*Book, error) {
 }
 
 func (r *memoryBookRepository) Create(book *Book) error {
-	_, exists := r.books[book.ID]
+	_, exists := r.books[*book.ID]
 	if exists {
 		return errors.New("book already exists")
 	}
 
-	r.books[book.ID] = *book
+	r.books[*book.ID] = *book
 	return nil
 }
 
 func (r *memoryBookRepository) Update(book *Book) error {
-	r.books[book.ID] = *book
+	r.books[*book.ID] = *book
 	return nil
 }

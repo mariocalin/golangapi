@@ -10,11 +10,11 @@ import (
 type BookId = uuid.UUID
 
 type Book struct {
-	ID          BookId
-	Name        Name
-	PublishDate PublishDate
-	Categories  Categories
-	Description Description
+	ID          *BookId
+	Name        *Name
+	PublishDate *PublishDate
+	Categories  *Categories
+	Description *Description
 }
 
 type Name struct {
