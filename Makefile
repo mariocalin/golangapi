@@ -1,14 +1,33 @@
 MAIN_PACKAGE_PATH := ./cmd/server
 MAIN_SERVER_FILE := api.go
 BINARY_NAME := server
+API_DOCS=./docs
 
-run: build run-bin
+# ----
+# Run
+# ----
+run: build run/bin
 
-build:
+run/bin:
+	bin/${BINARY_NAME}
+
+# ----
+# Build
+# ----
+
+build: build/pre build/do
+
+build/pre:
 	mkdir -p bin
+
+build/do:
 	go build -o bin/${BINARY_NAME} ${MAIN_PACKAGE_PATH}/${MAIN_SERVER_FILE}
 
-test:
+
+# ---
+# TEST
+# ---
+test/only:
 	go test -v ./...
 
 test/cover:
@@ -16,5 +35,8 @@ test/cover:
 	go test -v -coverprofile=tmp/coverage.out ./...
 	go tool cover -func=tmp/coverage.out
 
-run-bin:
-	bin/${BINARY_NAME}
+# ---
+# UTIL
+# ---
+api-spec:
+	swag init -g ${MAIN_PACKAGE_PATH}/${MAIN_SERVER_FILE} -o ${API_DOCS}
