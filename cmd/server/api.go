@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"library-api/external/kafka"
+	"library-api/external/sqlite3"
 	"library-api/internal/book"
 	"log"
 	"net/http"
@@ -10,7 +12,13 @@ import (
 	"syscall"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
+
+type context struct {
+	kafkaContext *kafka.KafkaContext
+	sqlContext   *sqlite3.Sqlite3Context
+}
 
 //	@title			Library Api
 //	@version		1.0
@@ -30,8 +38,13 @@ func main() {
 
 	// ---- BOOK ----
 	log.Println("Creating context...")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	context := createContext()
 
-	bookRepo := book.CreateBookRepositoryInstance()
+	bookRepo := book.CreateBookRepositoryInstance(context.sqlContext)
 	log.Println("bookRepo created")
 
 	bookEventPropagator := book.CreateBookEventPropagatorInstance()
@@ -69,6 +82,13 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Aplicación stopped")
+}
+
+func createContext() *context {
+	return &context{
+		kafkaContext: nil,
+		sqlContext:   sqlite3.CreateSqlite3Context(),
+	}
 }
 
 func startServer(gin *gin.Engine) {

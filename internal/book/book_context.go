@@ -1,25 +1,29 @@
 package book
 
-var event = "CHANNEL"
+import (
+	"library-api/external/sqlite3"
+	"sync"
+)
 
-var bookChannel chan *BookCreated = make(chan *BookCreated)
+var (
+	once        sync.Once
+	bookChannel chan *BookCreated
+)
 
-func CreateBookRepositoryInstance() BookRepository {
-	return NewSqlite3BookRepository("data.sqlite3")
+func CreateBookRepositoryInstance(sqliContext *sqlite3.Sqlite3Context) BookRepository {
+	return NewSqlite3BookRepository(sqliContext.Db)
 }
 
 func CreateBookEventPropagatorInstance() BookEventPropagator {
-	if event == "CHANNEL" {
-		return NewChannelBookEventPropagator(bookChannel)
-	}
-
-	panic("BookEventPropagator not initialized")
+	once.Do(initChannel)
+	return NewChannelBookEventPropagator(bookChannel)
 }
 
 func CreateBooEventConsumerInstance() BookEventConsumer {
-	if event == "CHANNEL" {
-		return NewChannelBookConsumer(bookChannel)
-	}
+	once.Do(initChannel)
+	return NewChannelBookConsumer(bookChannel)
+}
 
-	panic("BookEventConsumer not initialized")
+func initChannel() {
+	bookChannel = make(chan *BookCreated)
 }

@@ -43,12 +43,7 @@ CREATE TABLE  IF NOT EXISTS book_categories (
 );
 `
 
-func NewSqlite3BookRepository(dbpath string) BookRepository {
-	db, err := sql.Open("sqlite3", dbpath)
-	if err != nil {
-		panic(err)
-	}
-
+func NewSqlite3BookRepository(db *sql.DB) BookRepository {
 	if err := initSchema(db); err != nil {
 		panic(err)
 	}
