@@ -2,6 +2,7 @@ package book
 
 import (
 	"database/sql"
+	"library-api/common"
 	"os"
 	"strings"
 	"testing"
@@ -23,7 +24,8 @@ const dbpath string = "testdb.sqlite3"
 
 func (suite *MySuite) SetupSuite() {
 	testDatabase := getTestDB()
-	suite.repo = NewSqlite3BookRepository(testDatabase)
+	dateHandler := common.NewDateHandler()
+	suite.repo = NewSqlite3BookRepository(testDatabase, dateHandler)
 	suite.db = testDatabase
 }
 

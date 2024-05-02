@@ -2,6 +2,7 @@ package book
 
 import (
 	"database/sql"
+	"library-api/common"
 	"strings"
 	"time"
 
@@ -10,7 +11,8 @@ import (
 )
 
 type sqlite3BookRepository struct {
-	db *sql.DB
+	db          *sql.DB
+	dateHandler *common.DateHandler
 }
 
 type bookRow struct {
@@ -43,12 +45,12 @@ CREATE TABLE  IF NOT EXISTS book_categories (
 );
 `
 
-func NewSqlite3BookRepository(db *sql.DB) BookRepository {
+func NewSqlite3BookRepository(db *sql.DB, dateHandler *common.DateHandler) BookRepository {
 	if err := initSchema(db); err != nil {
 		panic(err)
 	}
 
-	return &sqlite3BookRepository{db}
+	return &sqlite3BookRepository{db: db, dateHandler: dateHandler}
 }
 
 func initSchema(db *sql.DB) error {

@@ -1,6 +1,7 @@
 package book
 
 import (
+	"library-api/common"
 	"library-api/external/sqlite3"
 	"sync"
 )
@@ -10,8 +11,8 @@ var (
 	bookChannel chan *BookCreated
 )
 
-func CreateBookRepositoryInstance(sqliContext *sqlite3.Sqlite3Context) BookRepository {
-	return NewSqlite3BookRepository(sqliContext.Db)
+func CreateBookRepositoryInstance(sqliContext *sqlite3.Sqlite3Context, dateHandler *common.DateHandler) BookRepository {
+	return NewSqlite3BookRepository(sqliContext.Db, dateHandler)
 }
 
 func CreateBookEventPropagatorInstance() BookEventPropagator {

@@ -2,6 +2,7 @@ package book
 
 import (
 	"fmt"
+	"library-api/common"
 	"log"
 	"net/http"
 	"time"
@@ -11,12 +12,14 @@ import (
 )
 
 type BookController struct {
-	svc BookService
+	svc         BookService
+	dateHandler *common.DateHandler
 }
 
-func NewBookController(svc BookService) *BookController {
+func NewBookController(svc BookService, dateHandler *common.DateHandler) *BookController {
 	return &BookController{
-		svc: svc,
+		svc:         svc,
+		dateHandler: dateHandler,
 	}
 }
 
@@ -38,7 +41,7 @@ func (controller *BookController) GetAllBooks(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, createBookResources(books))
+	c.JSON(http.StatusOK, controller.createBookResources(books))
 }
 
 func (controller *BookController) GetBookById(c *gin.Context) {
@@ -60,7 +63,7 @@ func (controller *BookController) GetBookById(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, createBookResource(book))
+	c.JSON(http.StatusOK, controller.createBookResource(book))
 }
 
 // CreateBook godoc
@@ -122,7 +125,7 @@ func (controller *BookController) CreateBook(c *gin.Context) {
 	}
 
 	// Return the created book
-	c.JSON(http.StatusCreated, createBookResource(book))
+	c.JSON(http.StatusCreated, controller.createBookResource(book))
 }
 
 type CreateBookRequest struct {
@@ -140,21 +143,21 @@ type BookResource struct {
 	Description string   `json:"description"`
 }
 
-func createBookResource(book *Book) BookResource {
+func (controller *BookController) createBookResource(book *Book) BookResource {
 	return BookResource{
 		Id:          book.ID.String(),
 		Name:        book.Name.Value(),
-		PublishDate: book.PublishDate.Value().Format(time.DateOnly),
+		PublishDate: controller.dateHandler.DateToString(book.PublishDate.Value()),
 		Categories:  book.Categories.Value(),
 		Description: book.Description.Value(),
 	}
 }
 
-func createBookResources(books []Book) []BookResource {
+func (controller *BookController) createBookResources(books []Book) []BookResource {
 	var resources []BookResource
 
 	for _, book := range books {
-		resources = append(resources, createBookResource(&book))
+		resources = append(resources, controller.createBookResource(&book))
 	}
 
 	return resources

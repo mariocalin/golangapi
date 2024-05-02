@@ -2,9 +2,9 @@ package book
 
 import (
 	"bytes"
+	"library-api/common"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -20,14 +20,15 @@ func setupRouter() *gin.Engine {
 
 func TestCreateBookHandler(t *testing.T) {
 	mockSvc := NewMockBookService(t)
-	controller := NewBookController(mockSvc)
+	realDateHandler := common.NewDateHandler()
+	controller := NewBookController(mockSvc, realDateHandler)
 
 	router := setupRouter()
 	router.POST("/book", controller.CreateBook)
 
 	t.Run("Success", func(t *testing.T) {
 
-		bookDate, _ := time.Parse(time.DateOnly, "2022-01-01")
+		bookDate, _ := realDateHandler.DateParse("2022-01-01")
 
 		id := uuid.New()
 

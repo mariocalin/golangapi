@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"library-api/common"
 	"library-api/external/kafka"
 	"library-api/external/sqlite3"
 	"library-api/internal/book"
@@ -42,9 +43,12 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	dateHandler := common.NewDateHandler()
+
 	context := createContext()
 
-	bookRepo := book.CreateBookRepositoryInstance(context.sqlContext)
+	bookRepo := book.CreateBookRepositoryInstance(context.sqlContext, dateHandler)
 	log.Println("bookRepo created")
 
 	bookEventPropagator := book.CreateBookEventPropagatorInstance()
@@ -66,7 +70,7 @@ func main() {
 	defer bookEventPropagator.Close()
 
 	router := gin.Default()
-	bookController := book.NewBookController(bookSvc)
+	bookController := book.NewBookController(bookSvc, dateHandler)
 	registerHandlers(router, bookController)
 
 	// ---- STATUS ----
