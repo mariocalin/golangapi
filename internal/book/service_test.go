@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func Test_BookService(t *testing.T) {
+func TestBookService(t *testing.T) {
 	t.Run("Create a book", func(t *testing.T) {
 		// Arrange
 		repo := NewMockBookRepository(t)

@@ -3,6 +3,8 @@ package sqlite3
 import (
 	"database/sql"
 	"os"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Sqlite3Context struct {

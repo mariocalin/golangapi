@@ -100,7 +100,7 @@ func (controller *BookController) CreateBook(c *gin.Context) {
 		return
 	}
 
-	publishDate, err := time.Parse(time.DateOnly, *req.PublishDate)
+	publishDate, err := time.ParseInLocation(time.DateOnly, *req.PublishDate, time.Local)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid publish date format"})
 		return

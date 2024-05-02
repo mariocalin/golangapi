@@ -27,14 +27,21 @@ build/do:
 # ---
 # TEST
 # ---
-test/only:
+test/unit:
 	go test -v ./...
 
-test/cover:
+test/unit/cover:
 	mkdir -p tmp
 	go test -v -coverprofile=tmp/coverage.out ./...
 	go tool cover -func=tmp/coverage.out
 
+test/all:
+	RUN_INTEGRATION_TESTS=1 go test -v ./...
+
+test/all/cover:
+	mkdir -p tmp
+	RUN_INTEGRATION_TESTS=1 go test -v -coverprofile=tmp/coverage.out ./...
+	go tool cover -func=tmp/coverage.out
 # ---
 # UTIL
 # ---

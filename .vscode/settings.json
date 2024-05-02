@@ -4,6 +4,7 @@
         "editor.defaultFormatter": "golang.go"
     },
     "go.toolsEnvVars": {
-        "CGO_ENABLED": "1"
+        "CGO_ENABLED": "1",
+        "RUN_INTEGRATION_TESTS": "1"
     }
 }

@@ -95,9 +95,9 @@ func (r *sqlite3BookRepository) FindAll() ([]Book, error) {
 			return nil, err
 		}
 
-		publishDate, _ := time.Parse(time.DateOnly, publishDateStr)
+		publishDate, _ := time.ParseInLocation(time.DateOnly, publishDateStr, time.Local)
 
-		bookRow.PublishDate = publishDate
+		bookRow.PublishDate = publishDate.Local()
 		bookRow.Categories = strings.Split(categories, ",")
 
 		book := toBook(&bookRow)
@@ -135,7 +135,7 @@ func (r *sqlite3BookRepository) FindByID(id *BookId) (*Book, error) {
 		return nil, err
 	}
 
-	publishDate, err := time.Parse(time.DateOnly, publishDateStr)
+	publishDate, err := time.ParseInLocation(time.DateOnly, publishDateStr, time.Local)
 	if err != nil {
 		return nil, err
 	}
@@ -215,6 +215,17 @@ func (r *sqlite3BookRepository) Update(book *Book) error {
 		}
 		transaction.Commit()
 	}()
+
+	bookStmt, err := transaction.Prepare("UPDATE books SET name = ?, publish_date = ?, description = ? WHERE id = ?")
+	if err != nil {
+		return err
+	}
+	defer bookStmt.Close()
+
+	_, err = bookStmt.Exec(book.Name.Value(), book.PublishDate.Value().Format(time.DateOnly), book.Description.Value(), book.ID.String())
+	if err != nil {
+		return err
+	}
 
 	// Eliminar todas las categorías asociadas al libro
 	_, err = transaction.Exec("DELETE FROM book_categories WHERE book_id = ?", book.ID.String())
