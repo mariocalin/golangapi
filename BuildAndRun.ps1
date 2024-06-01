@@ -23,7 +23,8 @@ function Build {
             Write-Error "Build failed."
             exit $LASTEXITCODE
         }
-    } else {
+    }
+    else {
         Write-Error "Main file not found: $mainFilePath"
         exit 1
     }
@@ -34,7 +35,8 @@ function Run {
     $binaryPath = Join-Path -Path "bin" -ChildPath $BINARY_NAME
     if (Test-Path -Path $binaryPath) {
         Start-Process -NoNewWindow -FilePath $binaryPath
-    } else {
+    }
+    else {
         Write-Error "Binary file not found: $binaryPath"
         exit 1
     }
@@ -60,7 +62,8 @@ function TestUnitCover {
     go test -v -coverprofile=$coveragePath ./...
     if ($LASTEXITCODE -eq 0) {
         go tool cover -func=$coveragePath
-    } else {
+    }
+    else {
         Write-Error "Unit tests with coverage failed."
         exit $LASTEXITCODE
     }
@@ -88,7 +91,8 @@ function TestAllCover {
     go test -v -coverprofile=$coveragePath ./...
     if ($LASTEXITCODE -eq 0) {
         go tool cover -func=$coveragePath
-    } else {
+    }
+    else {
         Write-Error "All tests with coverage failed."
         exit $LASTEXITCODE
     }
@@ -103,12 +107,14 @@ function ApiSpec {
             Write-Error "API specification generation failed."
             exit $LASTEXITCODE
         }
-    } else {
+    }
+    else {
         Write-Error "Main file not found: $mainFilePath"
         exit 1
     }
 }
 
+# Usage: PS .\BuildAndRun.ps1 -Task build
 switch ($Task) {
     "build" { Build }
     "run" { Run }
