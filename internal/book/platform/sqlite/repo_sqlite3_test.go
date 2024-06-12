@@ -1,8 +1,12 @@
-package book
+//go:build !unit || integration
+
+package sqlite
 
 import (
 	"database/sql"
 	"library-api/common"
+	"library-api/internal/book/application"
+	"library-api/internal/book/domain"
 	"os"
 	"strings"
 	"testing"
@@ -17,7 +21,7 @@ import (
 type MySuite struct {
 	suite.Suite
 	db   *sql.DB
-	repo BookRepository
+	repo application.BookRepository
 }
 
 const dbpath string = "testdb.sqlite3"
@@ -43,7 +47,7 @@ func (suite *MySuite) TestFindAll() {
 	suite.Assert().Nil(err)
 	suite.Assert().Empty(firstBooks)
 
-	var allBooks []Book
+	var allBooks []domain.Book
 
 	book1 := createTestBook()
 	suite.repo.Create(book1)
@@ -83,13 +87,13 @@ func (suite *MySuite) TestUpdateExistingBook() {
 	book1 := createTestBook()
 	suite.repo.Create(book1)
 
-	modifiedName, _ := NewName("Test modified book")
+	modifiedName, _ := domain.NewName("Test modified book")
 	book1.Name = modifiedName
 
-	modifiedDescription, _ := NewDescription("Modificed description")
+	modifiedDescription, _ := domain.NewDescription("Modificed description")
 	book1.Description = modifiedDescription
 
-	modifiedPublishedDate := NewPublishDate(time.Date(2023, 1, 1, 0, 0, 0, 0, time.Local))
+	modifiedPublishedDate := domain.NewPublishDate(time.Date(2023, 1, 1, 0, 0, 0, 0, time.Local))
 	book1.PublishDate = modifiedPublishedDate
 
 	suite.repo.Update(book1)
@@ -98,10 +102,6 @@ func (suite *MySuite) TestUpdateExistingBook() {
 }
 
 func TestRepo(t *testing.T) {
-	if integrationEnabled := os.Getenv("RUN_INTEGRATION_TESTS"); integrationEnabled != "1" {
-		t.Skip("Skipping integration test")
-	}
-
 	suite.Run(t, new(MySuite))
 }
 
@@ -116,15 +116,20 @@ func getTestDB() *sql.DB {
 	return db
 }
 
-func createTestBook() *Book {
+func createTestBook() *domain.Book {
 	bookId := uuid.New()
 
-	return &Book{
+	name, _ := domain.NewName(strings.TrimSpace(lorelai.LoremWords(2)))
+	publishDate := domain.NewPublishDate(time.Date(2023, 1, 1, 0, 0, 0, 0, time.Local))
+	categories, _ := domain.NewCategories(strings.Split(strings.TrimSpace(lorelai.LoremWords(2)), " "))
+	description, _ := domain.NewDescription(lorelai.Paragraph())
+
+	return &domain.Book{
 		ID:          &bookId,
-		Name:        &Name{strings.TrimSpace(lorelai.LoremWords(2))},
-		PublishDate: &PublishDate{time.Date(2023, 1, 1, 0, 0, 0, 0, time.Local)},
-		Categories:  &Categories{strings.Split(strings.TrimSpace(lorelai.LoremWords(2)), " ")},
-		Description: &Description{lorelai.Paragraph()},
+		Name:        name,
+		PublishDate: publishDate,
+		Categories:  categories,
+		Description: description,
 	}
 }
 

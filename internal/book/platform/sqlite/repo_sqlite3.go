@@ -1,8 +1,10 @@
-package book
+package sqlite
 
 import (
 	"database/sql"
 	"library-api/common"
+	"library-api/internal/book/application"
+	"library-api/internal/book/domain"
 	"strings"
 	"time"
 
@@ -45,7 +47,7 @@ CREATE TABLE  IF NOT EXISTS book_categories (
 );
 `
 
-func NewSqlite3BookRepository(db *sql.DB, dateHandler *common.DateHandler) BookRepository {
+func NewSqlite3BookRepository(db *sql.DB, dateHandler *common.DateHandler) application.BookRepository {
 	if err := initSchema(db); err != nil {
 		panic(err)
 	}
@@ -72,7 +74,7 @@ func initSchema(db *sql.DB) error {
 	return nil
 }
 
-func (r *sqlite3BookRepository) FindAll() ([]Book, error) {
+func (r *sqlite3BookRepository) FindAll() ([]domain.Book, error) {
 	rows, err := r.db.Query(`
 	SELECT b.id, b.name, DATE(b.publish_date), b.description, GROUP_CONCAT(c.category) 
 	FROM books b 
@@ -86,7 +88,7 @@ func (r *sqlite3BookRepository) FindAll() ([]Book, error) {
 
 	defer rows.Close()
 
-	var books []Book
+	var books []domain.Book
 
 	for rows.Next() {
 		var bookRow bookRow
@@ -102,8 +104,8 @@ func (r *sqlite3BookRepository) FindAll() ([]Book, error) {
 		bookRow.PublishDate = publishDate.Local()
 		bookRow.Categories = strings.Split(categories, ",")
 
-		book := toBook(&bookRow)
-		books = append(books, book)
+		domainBook := toBook(&bookRow)
+		books = append(books, domainBook)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -113,7 +115,7 @@ func (r *sqlite3BookRepository) FindAll() ([]Book, error) {
 	return books, nil
 }
 
-func (r *sqlite3BookRepository) FindByID(id *BookId) (*Book, error) {
+func (r *sqlite3BookRepository) FindByID(id *domain.Id) (*domain.Book, error) {
 	var bookRow bookRow
 	var publishDateStr string
 	var categories string
@@ -145,12 +147,12 @@ func (r *sqlite3BookRepository) FindByID(id *BookId) (*Book, error) {
 	bookRow.PublishDate = publishDate
 	bookRow.Categories = strings.Split(categories, ",")
 
-	book := toBook(&bookRow)
+	domainBook := toBook(&bookRow)
 
-	return &book, nil
+	return &domainBook, nil
 }
 
-func (r *sqlite3BookRepository) Create(book *Book) error {
+func (r *sqlite3BookRepository) Create(book *domain.Book) error {
 	transaction, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -189,7 +191,7 @@ func (r *sqlite3BookRepository) Create(book *Book) error {
 	}
 	defer linkStmt.Close()
 
-	for _, category := range book.Categories.value {
+	for _, category := range book.Categories.Value() {
 		var categoryID int
 		err := categoryStmt.QueryRow(category).Scan(&categoryID)
 		if err != nil {
@@ -205,7 +207,7 @@ func (r *sqlite3BookRepository) Create(book *Book) error {
 	return nil
 }
 
-func (r *sqlite3BookRepository) Update(book *Book) error {
+func (r *sqlite3BookRepository) Update(book *domain.Book) error {
 	transaction, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -249,7 +251,7 @@ func (r *sqlite3BookRepository) Update(book *Book) error {
 	defer linkStmt.Close()
 
 	// Insertar las nuevas categorías
-	for _, category := range book.Categories.value {
+	for _, category := range book.Categories.Value() {
 		var categoryID int
 		err := categoryStmt.QueryRow(category).Scan(&categoryID)
 		if err != nil {
@@ -265,14 +267,19 @@ func (r *sqlite3BookRepository) Update(book *Book) error {
 	return nil
 }
 
-func toBook(br *bookRow) Book {
+func toBook(br *bookRow) domain.Book {
 	id, _ := uuid.Parse(br.Id)
 
-	return Book{
+	bookName, _ := domain.NewName(br.Name)
+	publishDate := domain.NewPublishDate(br.PublishDate)
+	description, _ := domain.NewDescription(br.Description)
+	categories, _ := domain.NewCategories(br.Categories)
+
+	return domain.Book{
 		ID:          &id,
-		Name:        &Name{value: br.Name},
-		PublishDate: &PublishDate{value: br.PublishDate},
-		Description: &Description{value: br.Description},
-		Categories:  &Categories{value: br.Categories},
+		Name:        bookName,
+		PublishDate: publishDate,
+		Description: description,
+		Categories:  categories,
 	}
 }

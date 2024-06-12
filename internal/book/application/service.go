@@ -1,50 +1,32 @@
-package book
+package application
 
 import (
 	"errors"
-
 	"github.com/google/uuid"
+	"library-api/internal/book/domain"
 )
-
-type BookCommand struct {
-	Name        *Name
-	PublishDate *PublishDate
-	Categories  *Categories
-	Description *Description
-}
-
-func (command *BookCommand) isValidForCreate() bool {
-	return command.Name != nil && command.PublishDate != nil && command.Categories != nil && command.Description != nil
-}
-
-type BookService interface {
-	GetBooks() ([]Book, error)
-	GetBookByID(id *BookId) (*Book, error)
-	CreateBook(command *BookCommand) (*Book, error)
-	UpdateBook(id *BookId, command *BookCommand) error
-}
 
 type service struct {
 	repo   BookRepository
-	events BookEventPropagator
+	events EventPropagator
 }
 
-func NewService(repo BookRepository, events BookEventPropagator) BookService {
+func NewService(repo BookRepository, events EventPropagator) Service {
 	return &service{
 		repo:   repo,
 		events: events,
 	}
 }
 
-func (s *service) GetBooks() ([]Book, error) {
+func (s *service) GetBooks() ([]domain.Book, error) {
 	return s.repo.FindAll()
 }
 
-func (s *service) GetBookByID(id *BookId) (*Book, error) {
+func (s *service) GetBookByID(id *domain.Id) (*domain.Book, error) {
 	return s.repo.FindByID(id)
 }
 
-func (s *service) CreateBook(command *BookCommand) (*Book, error) {
+func (s *service) CreateBook(command *CreateCommand) (*domain.Book, error) {
 
 	if !command.isValidForCreate() {
 		return nil, errors.New("cannot create book")
@@ -52,7 +34,7 @@ func (s *service) CreateBook(command *BookCommand) (*Book, error) {
 
 	id := uuid.New()
 
-	newBook := Book{
+	newBook := domain.Book{
 		ID:          &id,
 		Name:        command.Name,
 		PublishDate: command.PublishDate,
@@ -61,12 +43,12 @@ func (s *service) CreateBook(command *BookCommand) (*Book, error) {
 	}
 
 	s.repo.Create(&newBook)
-	s.events.PropagateBookCreated(&BookCreated{Id: newBook.ID, Name: newBook.Name})
+	s.events.PropagateBookCreated(&CreatedEvent{Id: newBook.ID, Name: newBook.Name})
 
 	return &newBook, nil
 }
 
-func (s *service) UpdateBook(id *BookId, command *BookCommand) error {
+func (s *service) UpdateBook(id *domain.Id, command *CreateCommand) error {
 	existingBook, notFound := s.repo.FindByID(id)
 	if notFound != nil {
 		return notFound

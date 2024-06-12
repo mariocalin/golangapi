@@ -1,8 +1,12 @@
-package book
+//go:build unit || !integration
+
+package server
 
 import (
 	"bytes"
 	"library-api/common"
+	"library-api/internal/book/application"
+	"library-api/internal/book/domain"
 	"net/http/httptest"
 	"testing"
 
@@ -19,7 +23,7 @@ func setupRouter() *gin.Engine {
 }
 
 func TestCreateBookHandler(t *testing.T) {
-	mockSvc := NewMockBookService(t)
+	mockSvc := application.NewMockBookService(t)
 	realDateHandler := common.NewDateHandler()
 	controller := NewBookController(mockSvc, realDateHandler)
 
@@ -32,12 +36,17 @@ func TestCreateBookHandler(t *testing.T) {
 
 		id := uuid.New()
 
-		book := Book{
+		name, _ := domain.NewName("Example")
+		description, _ := domain.NewDescription("Example")
+		categories, _ := domain.NewCategories([]string{"fiction"})
+		publishDate := domain.NewPublishDate(bookDate)
+
+		book := domain.Book{
 			ID:          &id,
-			Name:        &Name{"Example"},
-			Description: &Description{"Example"},
-			Categories:  &Categories{[]string{"fiction"}},
-			PublishDate: &PublishDate{bookDate},
+			Name:        name,
+			Description: description,
+			Categories:  categories,
+			PublishDate: publishDate,
 		}
 
 		mockSvc.On("CreateBook", mock.Anything).Return(&book, nil)

@@ -44,7 +44,7 @@ function Run {
 
 function TestUnit {
     # Pruebas unitarias
-    go test -v ./...
+    go test -tag unit -v ./...
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Unit tests failed."
         exit $LASTEXITCODE
@@ -59,7 +59,7 @@ function TestUnitCover {
     }
     $coveragePath = Join-Path -Path $tmpPath -ChildPath "coverage.out"
 
-    go test -v -coverprofile=$coveragePath ./...
+    go test -tag unit -v -coverprofile=$coveragePath ./...
     if ($LASTEXITCODE -eq 0) {
         go tool cover -func=$coveragePath
     }
@@ -71,7 +71,6 @@ function TestUnitCover {
 
 function TestAll {
     # Todas las pruebas
-    $env:RUN_INTEGRATION_TESTS = 1
     go test -v ./...
     if ($LASTEXITCODE -ne 0) {
         Write-Error "All tests failed."
@@ -85,8 +84,7 @@ function TestAllCover {
     if (-Not (Test-Path -Path $tmpPath)) {
         New-Item -ItemType Directory -Path $tmpPath
     }
-    $env:RUN_INTEGRATION_TESTS = 1
-    $coveragePath = Join-Path -Path $tmpPath -ChildPath "coverage.out"
+   $coveragePath = Join-Path -Path $tmpPath -ChildPath "coverage.out"
 
     go test -v -coverprofile=$coveragePath ./...
     if ($LASTEXITCODE -eq 0) {

@@ -10,7 +10,6 @@ GET http://localhost:8080/book
 
 GET http://localhost:8080/book/2745b60c-4304-48f1-a11a-44b27a6434e1
 
-
 ### Creating La Galatea
 
 POST http://localhost:8080/book

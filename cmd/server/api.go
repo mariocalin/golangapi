@@ -6,6 +6,8 @@ import (
 	"library-api/external/kafka"
 	"library-api/external/sqlite3"
 	"library-api/internal/book"
+	"library-api/internal/book/application"
+	"library-api/internal/book/platform/server"
 	"log"
 	"net/http"
 	"os"
@@ -57,10 +59,10 @@ func main() {
 	bookEventConsumer := book.CreateBooEventConsumerInstance()
 	log.Println("bookEventConsumer created")
 
-	bookSvc := book.NewService(bookRepo, bookEventPropagator)
+	bookSvc := application.NewService(bookRepo, bookEventPropagator)
 	log.Println("bookEventConsumer created")
 
-	bookEventConsumer.BindBookCreated(func(bc *book.BookCreated) {
+	bookEventConsumer.BindBookCreated(func(bc *application.CreatedEvent) {
 		bok, _ := bookSvc.GetBookByID(bc.Id)
 		log.Println("A book has been created", bok)
 	})
@@ -70,7 +72,7 @@ func main() {
 	defer bookEventPropagator.Close()
 
 	router := gin.Default()
-	bookController := book.NewBookController(bookSvc, dateHandler)
+	bookController := server.NewBookController(bookSvc, dateHandler)
 	registerHandlers(router, bookController)
 
 	// ---- STATUS ----
@@ -102,7 +104,7 @@ func startServer(gin *gin.Engine) {
 	}
 }
 
-func registerHandlers(r *gin.Engine, bookController *book.BookController) {
+func registerHandlers(r *gin.Engine, bookController *server.Controller) {
 	r.GET("/book", bookController.GetAllBooks)
 	r.GET("/book/:id", bookController.GetBookById)
 	r.POST("/book", bookController.CreateBook)

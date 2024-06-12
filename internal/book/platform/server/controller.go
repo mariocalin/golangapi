@@ -1,8 +1,10 @@
-package book
+package server
 
 import (
 	"fmt"
 	"library-api/common"
+	"library-api/internal/book/application"
+	"library-api/internal/book/domain"
 	"log"
 	"net/http"
 	"time"
@@ -11,13 +13,13 @@ import (
 	"github.com/google/uuid"
 )
 
-type BookController struct {
-	svc         BookService
+type Controller struct {
+	svc         application.Service
 	dateHandler *common.DateHandler
 }
 
-func NewBookController(svc BookService, dateHandler *common.DateHandler) *BookController {
-	return &BookController{
+func NewBookController(svc application.Service, dateHandler *common.DateHandler) *Controller {
+	return &Controller{
 		svc:         svc,
 		dateHandler: dateHandler,
 	}
@@ -32,7 +34,7 @@ func NewBookController(svc BookService, dateHandler *common.DateHandler) *BookCo
 //	@Produce		json
 //	@Success		200	{object}	BookResource
 //	@Router			/book [get]
-func (controller *BookController) GetAllBooks(c *gin.Context) {
+func (controller *Controller) GetAllBooks(c *gin.Context) {
 	log.Println("Calling getAllBooksHandler")
 	books, err := controller.svc.GetBooks()
 	if err != nil {
@@ -44,7 +46,7 @@ func (controller *BookController) GetAllBooks(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.createBookResources(books))
 }
 
-func (controller *BookController) GetBookById(c *gin.Context) {
+func (controller *Controller) GetBookById(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad id"})
@@ -77,7 +79,7 @@ func (controller *BookController) GetBookById(c *gin.Context) {
 //
 // @Success		200		{object}	BookResource
 // @Router			/book [post]
-func (controller *BookController) CreateBook(c *gin.Context) {
+func (controller *Controller) CreateBook(c *gin.Context) {
 	var req CreateBookRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -85,19 +87,19 @@ func (controller *BookController) CreateBook(c *gin.Context) {
 	}
 
 	// Parse publish date
-	name, err := NewName(*req.Name)
+	name, err := domain.NewName(*req.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid name"})
 		return
 	}
 
-	description, err := NewDescription(*req.Description)
+	description, err := domain.NewDescription(*req.Description)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid description"})
 		return
 	}
 
-	categories, err := NewCategories(*req.Categories)
+	categories, err := domain.NewCategories(*req.Categories)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid categories"})
 		return
@@ -110,11 +112,11 @@ func (controller *BookController) CreateBook(c *gin.Context) {
 	}
 
 	// Create command
-	command := BookCommand{
+	command := application.CreateCommand{
 		Name:        name,
 		Description: description,
 		Categories:  categories,
-		PublishDate: NewPublishDate(publishDate)}
+		PublishDate: domain.NewPublishDate(publishDate)}
 
 	// Add the book using the service
 	book, err := controller.svc.CreateBook(&command)
@@ -143,7 +145,7 @@ type BookResource struct {
 	Description string   `json:"description"`
 }
 
-func (controller *BookController) createBookResource(book *Book) BookResource {
+func (controller *Controller) createBookResource(book *domain.Book) BookResource {
 	return BookResource{
 		Id:          book.ID.String(),
 		Name:        book.Name.Value(),
@@ -153,7 +155,7 @@ func (controller *BookController) createBookResource(book *Book) BookResource {
 	}
 }
 
-func (controller *BookController) createBookResources(books []Book) []BookResource {
+func (controller *Controller) createBookResources(books []domain.Book) []BookResource {
 	var resources []BookResource
 
 	for _, book := range books {

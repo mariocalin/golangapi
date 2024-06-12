@@ -1,7 +1,8 @@
-package book
+package kafka
 
 import (
 	"encoding/json"
+	"library-api/internal/book/application"
 
 	"github.com/IBM/sarama"
 )
@@ -11,14 +12,14 @@ type kafkaBookEventPropagator struct {
 	topic    string
 }
 
-func NewKafkaBookEventPropagator(producer sarama.AsyncProducer, topic string) BookEventPropagator {
+func NewKafkaBookEventPropagator(producer sarama.AsyncProducer, topic string) application.EventPropagator {
 	return &kafkaBookEventPropagator{
 		producer: producer,
 		topic:    topic,
 	}
 }
 
-func (p *kafkaBookEventPropagator) PropagateBookCreated(bookCreated *BookCreated) {
+func (p *kafkaBookEventPropagator) PropagateBookCreated(bookCreated *application.CreatedEvent) {
 	payload := struct {
 		Id string `json:"id"`
 	}{
