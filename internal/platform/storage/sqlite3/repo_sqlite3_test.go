@@ -116,23 +116,32 @@ func (s *RepositoryTestSuite) TestFindByNonExistingId() {
 	nonExistingId := uuid.New()
 
 	_ = s.transactionManager.RunInTransaction(context.Background(), func(ctx context.Context) error {
-		book, err := s.repo.FindByID(ctx, nonExistingId)
-		s.Assert().Nil(book)
-		s.Assert().NotNil(err)
+		_, err := s.repo.FindByID(ctx, nonExistingId)
+		s.Assert().ErrorIs(err, internal.ErrNotFound)
 		return nil
 	})
 }
 
 func (s *RepositoryTestSuite) TestCannotCreateDuplicatedBookId() {
 	book1 := createTestBook()
-	s.repo.Create(context.Background(), book1)
-	err := s.repo.Create(context.Background(), book1)
-	s.Assert().NotNil(err)
+	err := s.transactionManager.RunInTransaction(context.Background(), func(ctx context.Context) error {
+		return s.repo.Create(ctx, book1)
+	})
+	s.Require().NoError(err)
+
+	err = s.transactionManager.RunInTransaction(context.Background(), func(ctx context.Context) error {
+		return s.repo.Create(ctx, book1)
+	})
+	s.Require().Error(err)
 }
 
 func (s *RepositoryTestSuite) TestUpdateExistingBook() {
 	book1 := createTestBook()
-	s.repo.Create(context.Background(), book1)
+
+	err := s.transactionManager.RunInTransaction(context.Background(), func(ctx context.Context) error {
+		return s.repo.Create(ctx, book1)
+	})
+	s.Require().NoError(err)
 
 	modifiedName, _ := internal.NewBookName("Test modified book")
 	book1.Name = modifiedName
@@ -144,9 +153,17 @@ func (s *RepositoryTestSuite) TestUpdateExistingBook() {
 	modifiedPublishedDate, _ := internal.NewBookPublishDate(time)
 	book1.PublishDate = modifiedPublishedDate
 
-	s.repo.Update(context.Background(), book1)
-	persistedBook, _ := s.repo.FindByID(context.Background(), book1.ID)
-	s.Assert().EqualValues(book1, persistedBook)
+	err = s.transactionManager.RunInTransaction(context.Background(), func(ctx context.Context) error {
+		return s.repo.Update(ctx, book1)
+	})
+	s.Require().NoError(err)
+
+	_ = s.transactionManager.RunInTransaction(context.Background(), func(ctx context.Context) error {
+		persistedBook, err := s.repo.FindByID(ctx, book1.ID)
+		s.Assert().NoError(err)
+		s.Assert().EqualValues(book1, persistedBook)
+		return nil
+	})
 }
 
 func getTestDB() *sql.DB {

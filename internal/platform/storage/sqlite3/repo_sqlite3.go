@@ -113,6 +113,10 @@ func (r sqlite3BookRepository) FindByID(ctx context.Context, id internal.BookId)
 	// Ejecutar la consulta preparada
 	err = stmt.QueryRow(id.String()).Scan(&bookRow.Id, &bookRow.Name, &publishDateStr, &bookRow.Description, &categories)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return internal.Book{}, internal.ErrNotFound
+		}
+
 		return internal.Book{}, err
 	}
 
